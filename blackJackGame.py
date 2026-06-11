@@ -82,6 +82,13 @@ def calculate_points(player_cards, dealer_cards):
                 player_points = 1
             else:
                 player_points = int(player_cards[i][1:])
+            
+            if dealer_cards[i][1:] in special_cards:
+                dealer_points = 10
+            elif dealer_cards[i][1:] == "A":
+                dealer_points = 1
+            else:
+                dealer_points = int(dealer_cards[i][1:])
         else:
             if player_cards[i][1:] in special_cards:
                 if player_points == 1:
@@ -95,16 +102,7 @@ def calculate_points(player_cards, dealer_cards):
                     player_points += 1
             else:
                 player_points += int(player_cards[i][1:])
-    
-    for i in range(2):
-        if i == 0:
-            if dealer_cards[i][1:] in special_cards:
-                dealer_points = 10
-            elif dealer_cards[i][1:] == "A":
-                dealer_points = 1
-            else:
-                dealer_points = int(dealer_cards[i][1:])
-        else:
+
             if dealer_cards[i][1:] in special_cards:
                 if dealer_points == 1:
                     dealer_points += 20
