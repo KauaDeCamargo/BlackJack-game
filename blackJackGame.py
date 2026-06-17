@@ -1,7 +1,17 @@
 import random
 import time
+from dotenv import load_dotenv
+import os
+import openai
+from pydantic import BaseModel
+
+class BlackJackTip(BaseModel):
+    decision: str
+    confidence: float
+    details: str
 
 def main():
+
     if start_game().lower() =="e":
             print("Bye bye!")
     else:
@@ -110,6 +120,48 @@ def dealer_round(deck, dealer_points, player_points, dealer_cards):
         print("Draw! You and the dealer have the same points! The game will be restarted.")
         return True
 
+def call_ai_tip(player_cards, dealer_cards):
+    load_dotenv()
+    api_key = os.getenv("OPENAI_API_KEY")
+
+    player_cards_str = ", ".join(player_cards)
+    if len(dealer_cards) == 2:
+        dealer_cards_str = dealer_cards[0]
+    else:
+        dealer_cards_str = ", ".join(dealer_cards)
+
+    client = openai.OpenAI(api_key=api_key)
+
+    ai_response = client.responses.parse(
+        model="gpt-5.5",
+        input=f"""
+                You are a Blackjack assistant.
+
+                Your role is to help the player make the best possible decision using standard Blackjack strategy, mathematics, and probability.
+
+                You only know the cards visible to the player.
+
+                Player cards:
+                {player_cards_str}
+
+                Dealer visible card:
+                {dealer_cards_str}
+
+                Based on the available information, recommend exactly one action:
+
+                - Hit
+                - Stand
+
+                Briefly explain your reasoning in no more than three sentences.
+                """,
+        text_format=BlackJackTip
+    )
+    parsed_output = ai_response.output_parsed
+
+    print(f"AI Decision: {parsed_output.decision}")
+    print(f"Confidence: {parsed_output.confidence}")
+    print(f"Details: {parsed_output.details}")
+
 def game(deck, player_cards, dealer_cards):
     
     player_points = calculate_points(player_cards)
@@ -124,7 +176,7 @@ def game(deck, player_cards, dealer_cards):
         print(f"Dealer cards: {' | '.join(dealer_cards)}")
     else:
          while True:
-            response = input(f"You have {' | '.join(player_cards)}\nType S to stand, H to hit or E to exit\n")
+            response = input(f"You have {' | '.join(player_cards)}\nType S to stand, H to hit, A to AI tip or E to exit\n")
             if response.lower() == 'e':
                 break
             elif response.lower() == 's':
@@ -134,6 +186,8 @@ def game(deck, player_cards, dealer_cards):
                     print(f"Dealer cards: {' | '.join(dealer_cards)}")
                     print(f"Your cards: {' | '.join(player_cards)}")
                     break
+            elif response.lower() == 'a':
+                call_ai_tip(player_cards, dealer_cards)
             else:
                 print(f"Your cards: {' | '.join(player_cards)}")
                 time.sleep(1)
