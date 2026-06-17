@@ -69,28 +69,21 @@ def calculate_points(cards):
     special_cards = ["J", "Q", "K"]
 
     value_of_cards = 0
+    aces = 0
 
-    for i in range(len(cards)):
-        if i == 0:
-            if cards[i][1:] in special_cards:
-                value_of_cards = 10
-            elif cards[i][1:] == "A":
-                value_of_cards = 1
-            else:
-                value_of_cards = int(cards[i][1:])
+    for card in cards:
+        value = card[1:]
+        if value in special_cards:
+            value_of_cards += 10
+        elif value == "A":
+            aces += 1
+            value_of_cards += 11
         else:
-            if cards[i][1:] in special_cards + ["10"]:
-                if value_of_cards == 1:
-                    value_of_cards += 20
-                else:
-                    value_of_cards += 10
-            elif cards[i][1:] == "A":
-                if value_of_cards == 10:
-                    value_of_cards += 11
-                else:
-                    value_of_cards += 1
-            else:
-                value_of_cards += int(cards[i][1:])
+            value_of_cards += int(value)
+
+    while value_of_cards > 21 and aces > 0:
+        value_of_cards -= 10
+        aces -= 1
 
     return value_of_cards
 
@@ -98,23 +91,24 @@ def dealer_round(deck, dealer_points, player_points, dealer_cards):
     print(f"Dealer cards: {' | '.join(dealer_cards)}")
     time.sleep(1)
     
-    end_round = False
+    while dealer_points < 17:
+        dealer_cards.append(deck.pop())
+        dealer_points = calculate_points(dealer_cards)
+        print(f"New dealer card: {dealer_cards[-1]}")
+        time.sleep(1)
 
-    while end_round == False:
-        if dealer_points > 21:
-            print("You win, the dealer busted! The game will be restarted.")
-            end_round = True
-            return end_round
-        elif dealer_points > player_points:
-            print("You lost, dealer won! The game will be restarted.")
-            end_round = True
-            return end_round
-        else:
-            dealer_cards.append(deck.pop())
-            dealer_points = calculate_points(dealer_cards)
-            print(f"New dealer card: {dealer_cards[-1]}")
-            time.sleep(1)
-            continue
+    if dealer_points > 21:
+        print("You win, the dealer busted! The game will be restarted.")
+        return True
+    elif dealer_points > player_points:
+        print("You lost, dealer won! The game will be restarted.")
+        return True
+    elif dealer_points < player_points:
+        print("You win! You have more points than dealer! The game will be restarted.")
+        return True
+    else:
+        print("Draw! You and the dealer have the same points! The game will be restarted.")
+        return True
 
 def game(deck, player_cards, dealer_cards):
     
@@ -130,7 +124,7 @@ def game(deck, player_cards, dealer_cards):
         print(f"Dealer cards: {' | '.join(dealer_cards)}")
     else:
          while True:
-            response = input(f"You have {' | '.join(player_cards)}\nType S to stand, H to hint or E to exit\n")
+            response = input(f"You have {' | '.join(player_cards)}\nType S to stand, H to hit or E to exit\n")
             if response.lower() == 'e':
                 break
             elif response.lower() == 's':
